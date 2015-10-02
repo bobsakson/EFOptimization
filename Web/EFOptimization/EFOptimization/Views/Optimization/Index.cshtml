@@ -1,17 +1,106 @@
-﻿@{
-    Layout = null;
+﻿
+@{
+  ViewBag.Title = "Optimization";
 }
 
-<!DOCTYPE html>
+@section scripts{
+  <script>
+    (function () {
+      $(function () {
+        $(document).on("click", ".ajax-button", function () {
+          var action = $(this).data("action");
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title></title>
-</head>
-<body>
-    <div>
-    
+          $.ajax({
+            method: "POST",
+            url: "/Optimization/" + action,
+            data: { name: "John", productId: 1 }
+          }).done(function (result) {
+
+          })
+        });
+      })
+    })();
+
+  </script>
+}
+
+
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingTwo">
+      <h4 class="panel-title">
+        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+          Transactions and No Tracking
+        </a>
+      </h4>
     </div>
-</body>
-</html>
+    <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-md-4">
+            <button class="btn btn-default ajax-button" data-action="GetTransactionHistoryList">Get Transaction History List Tracking</button>
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-default ajax-button" data-action="GetTransactionHistoryNoChangesList">Get Transaction History List No Tracking</button>
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-default ajax-button" data-action="UpdateProductsList">Update Products List</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingOne">
+      <h4 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+          Bad Practices
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-md-3">
+            <button class="btn btn-default ajax-button" data-action="GetProductReviews">Get Product Reviews</button>
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-default ajax-button" data-action="GetProductReviewsFast">Get Product Reviews Fast</button>
+          </div>
+          <div class="col-md-3">
+          </div>
+          <div class="col-md-3">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingThree">
+      <h4 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+          DTO Examples
+        </a>
+      </h4>
+    </div>
+    <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-md-3">
+            <button class="btn btn-default ajax-button" data-action="GetProductsDuplicateList">Get Products Duplicate List</button>
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-default ajax-button" data-action="GetProductsFullList">Get Products Full List</button>
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-default ajax-button" data-action="GetProductsList">Get Products List</button>
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-default ajax-button" data-action="GetProductsBigInclude">Include Gone Wild</button>
+            <button class="btn btn-default ajax-button" data-action="GetProductsBiggerInclude">Include Gone Wilder</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
