@@ -156,6 +156,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\DTO\ProductListModel.cs" />
+    <Compile Include="Models\QueryTextModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -179,7 +180,9 @@
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
     <Content Include="Scripts\_references.js" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -195,6 +198,7 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Query\Index.cshtml" />
     <Content Include="Views\Optimization\Index.cshtml" />
+    <Content Include="Views\Query\QueryText.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

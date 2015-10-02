@@ -6,6 +6,9 @@ using System.Web;
 using System.Web.Mvc;
 using System.Data;
 using System.Data.Entity.Core.Objects;
+using System.Data.Entity;
+using EFOptimization.Models;
+using System.Data.Entity.Infrastructure;
 
 namespace EFOptimization.Controllers
 {
@@ -17,51 +20,199 @@ namespace EFOptimization.Controllers
       return View();
     }
 
-    public ActionResult Test1()
+    public ActionResult SeeEFQueryWithToString()
     {
       var awContext = new AdventureWorks();
 
-      var customers = awContext.Customers.ToList();
+      var query =   awContext.Customers
+                    .Where(x => x.Person.LastName == "Johnson")
+                    .Include(x => x.SalesOrderHeaders)
+                    .Include(x => x.Person);
 
-      var customer = customers.Where(x => x.CustomerID == 10).Select(x => x);
+      var queryTextModel = new QueryTextModel() { QueryText = query.ToString() };
 
-      return View("Index");
+      return View("QueryText", queryTextModel);
     }
 
-    public ActionResult Test2()
+    public ActionResult AnyQuery()
     {
       var awContext = new AdventureWorks();
 
-      var customer = awContext.Customers.Where(x => x.CustomerID == 10).Single();
+      var query = awContext.SalesOrderDetails.Any(x => x.SalesOrderHeader.Customer.Person.LastName == "Johnson");
 
-      return View("Index");
+      var queryTextModel = new QueryTextModel() { QueryText = "AnyQuery" };
+
+      return View("QueryText", queryTextModel);
     }
 
-    public ActionResult Test3()
+    public ActionResult FirstOrDefaultQuery()
     {
       var awContext = new AdventureWorks();
 
-      var customer = awContext.Customers.Where(x => x.CustomerID == 29825).First();
-      var orders = customer.SalesOrderHeaders.ToList();
+      var query = awContext.SalesOrderDetails.FirstOrDefault(x => x.SalesOrderHeader.Customer.Person.LastName == "Johnson");
 
-      var total = orders.Sum(x => x.SubTotal);
+      var queryTextModel = new QueryTextModel() { QueryText = "FirstOrDefaultQuery" };
 
-
-      return View("Index");
+      return View("QueryText", queryTextModel);
     }
 
-    public ActionResult Test4()
+    public ActionResult SingleQuery()
     {
       var awContext = new AdventureWorks();
 
-      var customer = awContext.Customers.Where(x => x.CustomerID == 29825);
-      var customerquery = customer.ToString();
+      var query = awContext.SalesOrderDetails.Single(x => x.SalesOrderHeader.Customer.Person.LastName == "Sacksteder");
 
-      var orders = customer.First().SalesOrderHeaders.ToList();
+      var queryTextModel = new QueryTextModel() { QueryText = "SingleQuery" };
 
-      var total = orders.Sum(x => x.SubTotal);
+      return View("QueryText", queryTextModel);
+    }
+
+    public ActionResult DefaultIfEmptyQuery()
+    {
+      var awContext = new AdventureWorks();
+
+      var person = new Person()
+      {
+        LastName = "Sakson"
+      };
+
+      var people = awContext.People.Where(x => x.LastName == "Sakson").ToList().DefaultIfEmpty(person);
+
+      var queryTextModel = new QueryTextModel() { QueryText = people.First().LastName };
+
+      return View("QueryText", queryTextModel);
+    }
+
+    public ActionResult EagerLoadQuery(int id)
+    {
+      // 51739
+      var awContext = new AdventureWorks();
+      var query =   awContext.SalesOrderHeaders
+                    .Where(x => x.SalesOrderID == id)
+                    .Include(x => x.SalesOrderDetails)
+                    .FirstOrDefault();
+
+      var salesOrderDetails = query.SalesOrderDetails.Where(x => x.UnitPrice > 100).ToList();
+
+      var queryTextModel = new QueryTextModel() { QueryText = "EagerLoadQuery" };
+
+      return View("QueryText", queryTextModel);
+    }
+
+    public ActionResult LazyLoadQuery(int id)
+    {
+      // 51739
+
+      var awContext = new AdventureWorks();
+      var query = awContext.SalesOrderHeaders
+                    .Where(x => x.SalesOrderID == id)
+                    .FirstOrDefault();
+
+      var salesOrderDetail = query.SalesOrderDetails.Where(x => x.UnitPrice > 100).ToList();
+
+      var queryTextModel = new QueryTextModel() { QueryText = "LazyLoadQuery" };
+
+      return View("QueryText", queryTextModel);
+    }
+
+    public ActionResult IncludeQuery()
+    {
+      var awContext = new AdventureWorks();
+
+      var query =   awContext.SalesOrderDetails
+                    .Where(x => x.SalesOrderHeader.Customer.Person.LastName == "Johnson")
+                    .Include(x => x.SalesOrderHeader)
+                    .Include(x => x.SalesOrderHeader.Customer.Person)
+                    .Include(x => x.SalesOrderHeader.Customer.Person.PersonPhones)
+                    .Include(x => x.SalesOrderHeader.Customer.Person.EmailAddresses).ToList();
+
+      var queryTextModel = new QueryTextModel() { QueryText = "IncludeQuery" };
+
+      return View("QueryText", queryTextModel);
+    }
+
+    public ActionResult LazyLoadDisposedContextQuery()
+    {
+      SalesOrderHeader query;
+      var queryTextModel = new QueryTextModel();
+
+      using (var awContext = new AdventureWorks())
+      {
+        query = awContext.SalesOrderHeaders
+                .Where(x => x.SalesOrderID == 51739)
+                .FirstOrDefault();
+      }
       
-      return View("Index");
+      try
+      {
+        var salesOrderDetail = query.SalesOrderDetails.Where(x => x.UnitPrice > 100).ToList();
+      }  
+      catch(Exception ex)
+      {
+        queryTextModel.QueryText = ex.Message;
+
+        return View("QueryText", queryTextModel);
+      }
+
+      queryTextModel.QueryText = "Never going to get here.";
+
+      return View("QueryText", queryTextModel);
+    }
+
+    public ActionResult LazyLoadForEachQuery()
+    {
+      var awContext = new AdventureWorks();
+      var query = awContext.SalesOrderHeaders
+                    .Take(1000);
+
+      var totalUnitPrice = 0m;
+
+      foreach(var order in query)
+      {
+        foreach(var detail in order.SalesOrderDetails)
+        {
+          totalUnitPrice += detail.UnitPrice;
+        }        
+      }
+
+      var queryTextModel = new QueryTextModel() { QueryText = "LazyLoadForEachQuery" };
+
+      return View("QueryText", queryTextModel);
+    }
+
+    public ActionResult EagerLoadForEachQuery()
+    {
+      var awContext = new AdventureWorks();
+      var query = awContext.SalesOrderHeaders
+                  .Include(x => x.SalesOrderDetails)
+                  .Take(1000);
+
+      var totalUnitPrice = 0m;
+
+      foreach (var order in query)
+      {
+        foreach (var detail in order.SalesOrderDetails)
+        {
+          totalUnitPrice += detail.UnitPrice;
+        }
+      }
+
+      var queryTextModel = new QueryTextModel() { QueryText = "LazyLoadForEachQuery" };
+
+      return View("QueryText", queryTextModel);
+    }
+
+    public ActionResult EFCasingQuery()
+    {
+      var awContext = new AdventureWorks();
+
+      var lower = awContext.People.Where(x => x.LastName == "Johnson").ToList().Count;
+      var upper = awContext.People.Where(x => x.LastName == "JOHNSON").ToList().Count;
+      var mixed = awContext.People.Where(x => x.LastName == "JoHnSON").ToList().Count;
+
+      var queryTextModel = new QueryTextModel() { QueryText = "EFCasingQuery" };
+
+      return View("QueryText", queryTextModel);
     }
   }
 }

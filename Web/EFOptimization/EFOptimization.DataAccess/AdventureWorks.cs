@@ -10,6 +10,8 @@ namespace EFOptimization.DataAccess
     public AdventureWorks()
         : base("name=AdventureWorks")
     {
+      //disable initializer
+      Database.SetInitializer<AdventureWorks>(null);      
     }
 
     public virtual DbSet<Department> Departments { get; set; }
